@@ -8,7 +8,17 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 
 const InterviewPage = () => {
-  const { messages, questions, interviewState, startInterview, processResponse, showSummary, setShowSummary } = useInterviewLogic();
+  const { 
+    messages, 
+    questions, 
+    interviewState, 
+    startInterview, 
+    processResponse, 
+    showSummary, 
+    setShowSummary,
+    hasCompletedAssessment,
+    checkingPreviousAssessment
+  } = useInterviewLogic();
 
   // Generate summary data when showing summary
   const summaryData = showSummary ? {
@@ -84,6 +94,8 @@ const InterviewPage = () => {
                 isInterviewActive={interviewState.isActive}
                 showSummaryButton={!interviewState.isActive && interviewState.candidateResponses.length > 0}
                 onShowSummary={() => setShowSummary(true)}
+                hasCompletedAssessment={hasCompletedAssessment}
+                checkingPreviousAssessment={checkingPreviousAssessment}
               />
             </div>
           </div>

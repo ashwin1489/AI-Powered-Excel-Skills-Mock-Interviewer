@@ -40,27 +40,60 @@ export const useInterviewLogic = () => {
     sessionId: null
   });
   const [showSummary, setShowSummary] = useState(false);
+  const [hasCompletedAssessment, setHasCompletedAssessment] = useState(false);
+  const [checkingPreviousAssessment, setCheckingPreviousAssessment] = useState(true);
 
-  // Load questions from Supabase
+  // Load questions and check for previous assessment
   useEffect(() => {
-    const loadQuestions = async () => {
-      const { data, error } = await supabase
+    const loadData = async () => {
+      if (!user) {
+        setCheckingPreviousAssessment(false);
+        return;
+      }
+
+      // Load questions
+      const { data: questionsData, error: questionsError } = await supabase
         .from('interview_questions')
         .select('*')
         .eq('is_active', true)
         .order('created_at');
       
-      if (data && !error) {
-        setQuestions(data.map(q => ({
+      if (questionsData && !questionsError) {
+        setQuestions(questionsData.map(q => ({
           ...q,
           difficulty: q.difficulty as 'beginner' | 'intermediate' | 'advanced',
           status: 'pending' as const
         })));
       }
+
+      // Check if user has already completed an assessment
+      const { data: completedSession, error: sessionError } = await supabase
+        .from('interview_sessions')
+        .select('id, status, overall_score, completed_at')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      if (completedSession && completedSession.length > 0 && !sessionError) {
+        setHasCompletedAssessment(true);
+        addMessage(
+          `You have already completed the Excel & Data Visualization Assessment on ${new Date(completedSession[0].completed_at).toLocaleDateString()}.
+          
+Your final score was: ${Math.round(completedSession[0].overall_score || 0)}%
+
+Each user can only take this assessment once to ensure fairness and integrity of the evaluation process.
+
+Thank you for your participation!`,
+          true
+        );
+      }
+
+      setCheckingPreviousAssessment(false);
     };
 
-    loadQuestions();
-  }, []);
+    loadData();
+  }, [user]);
 
   // Update time elapsed
   useEffect(() => {
@@ -90,7 +123,7 @@ export const useInterviewLogic = () => {
   }, []);
 
   const startInterview = useCallback(async () => {
-    if (!user) return;
+    if (!user || hasCompletedAssessment) return;
 
     // Create interview session in database
     const { data: session, error } = await supabase
@@ -288,6 +321,8 @@ This assessment successfully evaluated all critical points from the comprehensiv
     startInterview,
     processResponse,
     showSummary,
-    setShowSummary
+    setShowSummary,
+    hasCompletedAssessment,
+    checkingPreviousAssessment
   };
 };

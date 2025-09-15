@@ -19,6 +19,8 @@ interface InterviewChatProps {
   isInterviewActive: boolean;
   showSummaryButton?: boolean;
   onShowSummary?: () => void;
+  hasCompletedAssessment?: boolean;
+  checkingPreviousAssessment?: boolean;
 }
 
 export const InterviewChat = ({ 
@@ -27,7 +29,9 @@ export const InterviewChat = ({
   messages, 
   isInterviewActive,
   showSummaryButton = false,
-  onShowSummary
+  onShowSummary,
+  hasCompletedAssessment = false,
+  checkingPreviousAssessment = false
 }: InterviewChatProps) => {
   const [inputMessage, setInputMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
@@ -62,6 +66,49 @@ export const InterviewChat = ({
   };
 
   if (!isInterviewActive) {
+    if (checkingPreviousAssessment) {
+      return (
+        <Card className="p-8 text-center space-y-6 shadow-interview">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground">Loading...</h2>
+            <p className="text-muted-foreground">
+              Checking your assessment history...
+            </p>
+          </div>
+        </Card>
+      );
+    }
+
+    if (hasCompletedAssessment) {
+      return (
+        <Card className="p-8 text-center space-y-6 shadow-interview">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground">Assessment Already Completed</h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              You have already completed this assessment. Each user can only take the Excel Skills Assessment once to ensure fairness and integrity.
+            </p>
+            <div className="p-4 bg-muted rounded-lg text-sm max-w-md mx-auto">
+              <p className="text-muted-foreground">
+                If you believe this is an error or need to retake the assessment for special circumstances, please contact the administrator.
+              </p>
+            </div>
+          </div>
+          {messages.length > 0 && (
+            <div className="max-h-60 overflow-y-auto text-left bg-muted/50 rounded-lg p-4">
+              {messages.map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  message={message.text}
+                  isBot={message.isBot}
+                  timestamp={message.timestamp}
+                />
+              ))}
+            </div>
+          )}
+        </Card>
+      );
+    }
+
     return (
       <Card className="p-8 text-center space-y-6 shadow-interview">
         <div className="space-y-4">
@@ -88,8 +135,9 @@ export const InterviewChat = ({
           <Button 
             onClick={onInterviewStart}
             className="bg-gradient-primary hover:bg-primary-hover text-white shadow-button px-8 py-3 text-lg font-medium"
+            disabled={hasCompletedAssessment}
           >
-            Start Interview
+            Start Assessment
           </Button>
           
           {showSummaryButton && onShowSummary && (
