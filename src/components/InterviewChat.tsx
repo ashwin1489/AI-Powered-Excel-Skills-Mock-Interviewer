@@ -17,13 +17,17 @@ interface InterviewChatProps {
   onMessageSent: (message: string) => void;
   messages: Message[];
   isInterviewActive: boolean;
+  showSummaryButton?: boolean;
+  onShowSummary?: () => void;
 }
 
 export const InterviewChat = ({ 
   onInterviewStart, 
   onMessageSent, 
   messages, 
-  isInterviewActive 
+  isInterviewActive,
+  showSummaryButton = false,
+  onShowSummary
 }: InterviewChatProps) => {
   const [inputMessage, setInputMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
@@ -80,12 +84,24 @@ export const InterviewChat = ({
             </div>
           </div>
         </div>
-        <Button 
-          onClick={onInterviewStart}
-          className="bg-gradient-primary hover:bg-primary-hover text-white shadow-button px-8 py-3 text-lg font-medium"
-        >
-          Start Interview
-        </Button>
+        <div className="flex gap-4 justify-center">
+          <Button 
+            onClick={onInterviewStart}
+            className="bg-gradient-primary hover:bg-primary-hover text-white shadow-button px-8 py-3 text-lg font-medium"
+          >
+            Start Interview
+          </Button>
+          
+          {showSummaryButton && onShowSummary && (
+            <Button 
+              onClick={onShowSummary}
+              variant="outline"
+              className="px-8 py-3 text-lg font-medium"
+            >
+              View Detailed Report
+            </Button>
+          )}
+        </div>
       </Card>
     );
   }

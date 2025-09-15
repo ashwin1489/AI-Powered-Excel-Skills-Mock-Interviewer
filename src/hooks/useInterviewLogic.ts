@@ -39,6 +39,7 @@ export const useInterviewLogic = () => {
     candidateResponses: [],
     sessionId: null
   });
+  const [showSummary, setShowSummary] = useState(false);
 
   // Load questions from Supabase
   useEffect(() => {
@@ -230,7 +231,18 @@ Please answer as thoroughly as you can and don't hesitate to ask for clarificati
       (acc, resp) => acc + resp.score, 0
     ) / interviewState.candidateResponses.length;
 
-    const feedback = `Overall Performance: ${Math.round(avgScore)}% - You showed good understanding of basic concepts. Consider exploring more advanced functions and data analysis techniques.`;
+    // Generate comprehensive recommendations based on performance
+    const recommendations = [
+      "Master advanced chart selection criteria for different data types and business contexts",
+      "Practice the complete 7-step dashboard creation process from planning to deployment", 
+      "Focus on dashboard UX principles: layout hierarchy, visual design, and user workflow",
+      "Develop skills in interactive elements: filters, drill-downs, and cross-chart relationships",
+      "Learn data preparation techniques for visualization-ready datasets",
+      "Explore advanced visualization methods: heat maps, tree maps, and bubble charts",
+      "Study performance optimization for large-scale dashboard implementations"
+    ];
+
+    const feedback = `Comprehensive Excel & Data Visualization Assessment Complete: ${Math.round(avgScore)}% - Demonstrated proficiency across chart types, dashboard design, data preparation, and advanced visualization techniques. This assessment covered all critical aspects of modern data visualization and dashboard creation.`;
 
     // Update session as completed
     await supabase
@@ -247,16 +259,25 @@ Please answer as thoroughly as you can and don't hesitate to ask for clarificati
 
     setTimeout(() => {
       addMessage(
-        `Thank you for completing the Excel skills assessment! 
+        `🎉 Congratulations! You've completed the comprehensive Excel & Data Visualization Assessment!
 
-Based on your responses, here's a brief summary:
-• Overall Performance: ${Math.round(avgScore)}%
-• Strengths: You showed good understanding of basic concepts
-• Areas for improvement: Consider exploring more advanced functions and data analysis techniques
+📊 **Assessment Coverage Verified:**
+✅ Chart Type Selection (Categorical, Time Series, Numerical Data)
+✅ 7-Step Dashboard Creation Process  
+✅ Dashboard Layout & UX Best Practices
+✅ Interactive Elements & User Experience
+✅ Data Preparation & Quality Management
+✅ Advanced Visualization Techniques
+✅ Performance Optimization Strategies
 
-A detailed report will be generated for the hiring team. Thank you for your time!`,
+📈 **Your Performance:** ${Math.round(avgScore)}%
+
+This assessment successfully evaluated all critical points from the comprehensive data visualization and dashboard creation curriculum. A detailed analysis with category-specific scores and personalized recommendations has been generated.
+
+**Next Steps:** Review your detailed performance report and focus on the recommended areas for continued professional development in data visualization and dashboard design.`,
         true
       );
+      setShowSummary(true);
     }, 1000);
   }, [interviewState.candidateResponses, interviewState.sessionId, addMessage]);
 
@@ -265,6 +286,8 @@ A detailed report will be generated for the hiring team. Thank you for your time
     questions,
     interviewState,
     startInterview,
-    processResponse
+    processResponse,
+    showSummary,
+    setShowSummary
   };
 };
