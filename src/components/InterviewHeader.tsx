@@ -1,51 +1,53 @@
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Play, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface InterviewHeaderProps {
-  candidateName?: string;
-  position?: string;
-  duration?: string;
-  status: 'waiting' | 'in-progress' | 'completed';
+  interviewState: {
+    isActive: boolean;
+    timeElapsed: string;
+  };
+  onStartInterview: () => void;
 }
 
-export const InterviewHeader = ({ 
-  candidateName = "Excel Candidate", 
-  position = "Data Analyst", 
-  duration = "0:00",
-  status 
-}: InterviewHeaderProps) => {
-  const getStatusColor = () => {
-    switch (status) {
-      case 'waiting': return 'bg-muted text-muted-foreground';
-      case 'in-progress': return 'bg-gradient-primary text-white';
-      case 'completed': return 'bg-success text-success-foreground';
-    }
-  };
+export const InterviewHeader = ({ interviewState, onStartInterview }: InterviewHeaderProps) => {
+  const { user, signOut } = useAuth();
 
-  const getStatusText = () => {
-    switch (status) {
-      case 'waiting': return 'Ready to Start';
-      case 'in-progress': return 'Interview in Progress';
-      case 'completed': return 'Interview Completed';
-    }
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
-    <header className="bg-card border-b border-border p-6 shadow-card">
-      <div className="max-w-4xl mx-auto">
+    <header className="bg-card/80 backdrop-blur border-b border-border p-4">
+      <div className="container mx-auto">
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-foreground">Excel Skills Assessment</h1>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Candidate: <span className="font-medium text-foreground">{candidateName}</span></span>
-              <span>•</span>
-              <span>Position: <span className="font-medium text-foreground">{position}</span></span>
-              <span>•</span>
-              <span>Duration: <span className="font-medium text-foreground">{duration}</span></span>
+          <h1 className="text-2xl font-bold">Excel Skills Assessment</h1>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>Welcome, {user?.email}</span>
             </div>
+            
+            {interviewState.isActive ? (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {interviewState.timeElapsed}
+              </Badge>
+            ) : (
+              <Button onClick={onStartInterview} size="sm">
+                <Play className="h-4 w-4 mr-2" />
+                Start Interview
+              </Button>
+            )}
+
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
-          <Badge className={`px-4 py-2 font-medium ${getStatusColor()}`}>
-            {getStatusText()}
-          </Badge>
         </div>
       </div>
     </header>

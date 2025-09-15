@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
 interface Message {
   id: string;
@@ -13,7 +15,7 @@ interface InterviewQuestion {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   status: 'pending' | 'current' | 'completed';
   question: string;
-  expectedAnswerPoints: string[];
+  expected_answer_points: string[];
 }
 
 interface InterviewState {
@@ -22,62 +24,42 @@ interface InterviewState {
   startTime: Date | null;
   timeElapsed: string;
   candidateResponses: { questionId: string; response: string; score: number }[];
+  sessionId: string | null;
 }
 
-// Mock Excel interview questions
-const EXCEL_QUESTIONS: InterviewQuestion[] = [
-  {
-    id: '1',
-    category: 'Basic Formulas',
-    difficulty: 'beginner',
-    status: 'pending',
-    question: 'Can you explain the difference between relative and absolute cell references in Excel? When would you use each type?',
-    expectedAnswerPoints: ['Relative references change when copied', 'Absolute references stay fixed', 'Use $ symbol for absolute', 'Examples of use cases']
-  },
-  {
-    id: '2',
-    category: 'Data Analysis',
-    difficulty: 'intermediate',
-    status: 'pending',
-    question: 'Walk me through how you would use VLOOKUP to find customer information from a large dataset. What are some limitations of VLOOKUP?',
-    expectedAnswerPoints: ['VLOOKUP syntax', 'Table array concept', 'Column index number', 'Exact/approximate match', 'Limitations: left to right only', 'Alternative: INDEX-MATCH']
-  },
-  {
-    id: '3',
-    category: 'Pivot Tables',
-    difficulty: 'intermediate',
-    status: 'pending',
-    question: 'Describe how you would create a pivot table to analyze sales data by region and product category. What insights could this provide?',
-    expectedAnswerPoints: ['Data preparation', 'Creating pivot table', 'Rows, columns, values setup', 'Filtering options', 'Business insights', 'Drill-down capabilities']
-  },
-  {
-    id: '4',
-    category: 'Advanced Functions',
-    difficulty: 'advanced',
-    status: 'pending',
-    question: 'How would you use array formulas or dynamic arrays to solve complex data problems? Can you give me an example scenario?',
-    expectedAnswerPoints: ['Array formula concept', 'Dynamic arrays in Excel 365', 'FILTER, SORT, UNIQUE functions', 'Practical examples', 'Performance considerations']
-  },
-  {
-    id: '5',
-    category: 'Chart Creation',
-    difficulty: 'intermediate',
-    status: 'pending',
-    question: 'What factors do you consider when choosing the right chart type for data visualization? Can you walk through creating a dashboard?',
-    expectedAnswerPoints: ['Chart type selection criteria', 'Data story telling', 'Dashboard design principles', 'Interactive elements', 'Best practices for clarity']
-  }
-];
-
 export const useInterviewLogic = () => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [questions, setQuestions] = useState<InterviewQuestion[]>(EXCEL_QUESTIONS);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [interviewState, setInterviewState] = useState<InterviewState>({
     isActive: false,
     currentQuestionIndex: -1,
     startTime: null,
     timeElapsed: '0:00',
-    candidateResponses: []
+    candidateResponses: [],
+    sessionId: null
   });
+
+  // Load questions from Supabase
+  useEffect(() => {
+    const loadQuestions = async () => {
+      const { data, error } = await supabase
+        .from('interview_questions')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at');
+      
+      if (data && !error) {
+        setQuestions(data.map(q => ({
+          ...q,
+          difficulty: q.difficulty as 'beginner' | 'intermediate' | 'advanced',
+          status: 'pending' as const
+        })));
+      }
+    };
+
+    loadQuestions();
+  }, []);
 
   // Update time elapsed
   useEffect(() => {
@@ -106,12 +88,33 @@ export const useInterviewLogic = () => {
     setMessages(prev => [...prev, message]);
   }, []);
 
-  const startInterview = useCallback(() => {
+  const startInterview = useCallback(async () => {
+    if (!user) return;
+
+    // Create interview session in database
+    const { data: session, error } = await supabase
+      .from('interview_sessions')
+      .insert({
+        user_id: user.id,
+        status: 'in_progress',
+        started_at: new Date().toISOString(),
+        total_questions: questions.length,
+        current_question_index: 0
+      })
+      .select()
+      .single();
+
+    if (error || !session) {
+      console.error('Failed to create interview session:', error);
+      return;
+    }
+
     setInterviewState(prev => ({
       ...prev,
       isActive: true,
       startTime: new Date(),
-      currentQuestionIndex: 0
+      currentQuestionIndex: 0,
+      sessionId: session.id
     }));
 
     // Update first question status
@@ -132,12 +135,14 @@ Please answer as thoroughly as you can and don't hesitate to ask for clarificati
 
     // Add first question after a delay
     setTimeout(() => {
-      addMessage(EXCEL_QUESTIONS[0].question, true);
+      if (questions.length > 0) {
+        addMessage(questions[0].question, true);
+      }
     }, 2000);
-  }, [addMessage]);
+  }, [addMessage, user, questions]);
 
-  const processResponse = useCallback((response: string) => {
-    if (!interviewState.isActive) return;
+  const processResponse = useCallback(async (response: string) => {
+    if (!interviewState.isActive || !interviewState.sessionId) return;
 
     // Add user response
     addMessage(response, false);
@@ -147,7 +152,7 @@ Please answer as thoroughly as you can and don't hesitate to ask for clarificati
 
     // Simple scoring based on keyword matching (in a real app, this would use AI)
     const score = Math.min(
-      currentQ.expectedAnswerPoints.reduce((acc, point) => {
+      currentQ.expected_answer_points.reduce((acc, point) => {
         const keywords = point.toLowerCase().split(' ');
         const responseWords = response.toLowerCase();
         const matches = keywords.filter(keyword => responseWords.includes(keyword));
@@ -156,12 +161,22 @@ Please answer as thoroughly as you can and don't hesitate to ask for clarificati
       100
     );
 
-    // Store response
+    const roundedScore = Math.round(score);
+
+    // Store response in database
+    await supabase.from('interview_responses').insert({
+      session_id: interviewState.sessionId,
+      question_id: currentQ.id,
+      response_text: response,
+      score: roundedScore
+    });
+
+    // Store response in state
     setInterviewState(prev => ({
       ...prev,
       candidateResponses: [
         ...prev.candidateResponses,
-        { questionId: currentQ.id, response, score: Math.round(score) }
+        { questionId: currentQ.id, response, score: roundedScore }
       ]
     }));
 
@@ -176,6 +191,14 @@ Please answer as thoroughly as you can and don't hesitate to ask for clarificati
       return q;
     }));
 
+    // Update session progress
+    await supabase
+      .from('interview_sessions')
+      .update({ 
+        current_question_index: interviewState.currentQuestionIndex + 1 
+      })
+      .eq('id', interviewState.sessionId);
+
     // Provide AI feedback and next question
     setTimeout(() => {
       if (score >= 70) {
@@ -188,10 +211,10 @@ Please answer as thoroughly as you can and don't hesitate to ask for clarificati
 
       // Move to next question or complete interview
       const nextIndex = interviewState.currentQuestionIndex + 1;
-      if (nextIndex < EXCEL_QUESTIONS.length) {
+      if (nextIndex < questions.length) {
         setInterviewState(prev => ({ ...prev, currentQuestionIndex: nextIndex }));
         setTimeout(() => {
-          addMessage(EXCEL_QUESTIONS[nextIndex].question, true);
+          addMessage(questions[nextIndex].question, true);
         }, 1500);
       } else {
         // Complete interview
@@ -200,12 +223,27 @@ Please answer as thoroughly as you can and don't hesitate to ask for clarificati
     }, 1000);
   }, [interviewState, questions, addMessage]);
 
-  const completeInterview = useCallback(() => {
-    setInterviewState(prev => ({ ...prev, isActive: false }));
-    
+  const completeInterview = useCallback(async () => {
+    if (!interviewState.sessionId) return;
+
     const avgScore = interviewState.candidateResponses.reduce(
       (acc, resp) => acc + resp.score, 0
     ) / interviewState.candidateResponses.length;
+
+    const feedback = `Overall Performance: ${Math.round(avgScore)}% - You showed good understanding of basic concepts. Consider exploring more advanced functions and data analysis techniques.`;
+
+    // Update session as completed
+    await supabase
+      .from('interview_sessions')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        overall_score: avgScore,
+        feedback
+      })
+      .eq('id', interviewState.sessionId);
+
+    setInterviewState(prev => ({ ...prev, isActive: false }));
 
     setTimeout(() => {
       addMessage(
@@ -220,7 +258,7 @@ A detailed report will be generated for the hiring team. Thank you for your time
         true
       );
     }, 1000);
-  }, [interviewState.candidateResponses, addMessage]);
+  }, [interviewState.candidateResponses, interviewState.sessionId, addMessage]);
 
   return {
     messages,

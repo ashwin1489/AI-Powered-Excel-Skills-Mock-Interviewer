@@ -14,7 +14,153 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      interview_questions: {
+        Row: {
+          category: string
+          created_at: string
+          difficulty: string
+          expected_answer_points: string[]
+          id: string
+          is_active: boolean
+          question: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          difficulty: string
+          expected_answer_points: string[]
+          id?: string
+          is_active?: boolean
+          question: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          difficulty?: string
+          expected_answer_points?: string[]
+          id?: string
+          is_active?: boolean
+          question?: string
+        }
+        Relationships: []
+      }
+      interview_responses: {
+        Row: {
+          answered_at: string
+          feedback: string | null
+          id: string
+          question_id: string
+          response_text: string
+          score: number | null
+          session_id: string
+        }
+        Insert: {
+          answered_at?: string
+          feedback?: string | null
+          id?: string
+          question_id: string
+          response_text: string
+          score?: number | null
+          session_id: string
+        }
+        Update: {
+          answered_at?: string
+          feedback?: string | null
+          id?: string
+          question_id?: string
+          response_text?: string
+          score?: number | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "interview_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_responses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_question_index: number
+          feedback: string | null
+          id: string
+          overall_score: number | null
+          started_at: string | null
+          status: string
+          total_questions: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_question_index?: number
+          feedback?: string | null
+          id?: string
+          overall_score?: number | null
+          started_at?: string | null
+          status?: string
+          total_questions?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_question_index?: number
+          feedback?: string | null
+          id?: string
+          overall_score?: number | null
+          started_at?: string | null
+          status?: string
+          total_questions?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,60 +1,44 @@
-import { InterviewHeader } from "@/components/InterviewHeader";
-import { InterviewChat } from "@/components/InterviewChat";
-import { InterviewSidebar } from "@/components/InterviewSidebar";
-import { useInterviewLogic } from "@/hooks/useInterviewLogic";
+import React from 'react';
+import { InterviewHeader } from '@/components/InterviewHeader';
+import { InterviewSidebar } from '@/components/InterviewSidebar';
+import { InterviewChat } from '@/components/InterviewChat';
+import { useInterviewLogic } from '@/hooks/useInterviewLogic';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 const InterviewPage = () => {
-  const {
-    messages,
-    questions,
-    interviewState,
-    startInterview,
-    processResponse
-  } = useInterviewLogic();
-
-  const getInterviewStatus = () => {
-    if (!interviewState.isActive && interviewState.currentQuestionIndex === -1) {
-      return 'waiting';
-    }
-    if (interviewState.isActive) {
-      return 'in-progress';
-    }
-    return 'completed';
-  };
+  const { messages, questions, interviewState, startInterview, processResponse } = useInterviewLogic();
 
   return (
-    <div className="min-h-screen bg-gradient-secondary">
-      <InterviewHeader
-        status={getInterviewStatus()}
-        duration={interviewState.timeElapsed}
-      />
-      
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <InterviewSidebar
-              currentQuestion={interviewState.currentQuestionIndex + 1}
-              totalQuestions={questions.length}
-              timeElapsed={interviewState.timeElapsed}
-              questions={questions}
-            />
-          </div>
-          
-          {/* Main Chat Area */}
-          <div className="lg:col-span-3">
-            <div className="bg-card rounded-lg shadow-interview h-full">
-              <InterviewChat
-                onInterviewStart={startInterview}
-                onMessageSent={processResponse}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/50 to-primary/5">
+        <InterviewHeader 
+          interviewState={interviewState}
+          onStartInterview={startInterview}
+        />
+        
+        <div className="container mx-auto p-4 h-[calc(100vh-80px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
+            <div className="lg:col-span-1">
+              <InterviewSidebar 
+                questions={questions}
+                totalQuestions={questions.length}
+                timeElapsed={interviewState.timeElapsed}
+                currentQuestion={interviewState.currentQuestionIndex + 1}
+              />
+            </div>
+            
+            <div className="lg:col-span-3">
+              <InterviewChat 
                 messages={messages}
-                isInterviewActive={interviewState.isActive || messages.length > 0}
+                onMessageSent={processResponse}
+                onInterviewStart={startInterview}
+                isInterviewActive={interviewState.isActive}
               />
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 
