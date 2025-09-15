@@ -176,7 +176,7 @@ Please answer as thoroughly as you can and don't hesitate to ask for clarificati
   }, [addMessage, user, questions]);
 
   const processResponse = useCallback(async (response: string) => {
-    if (!interviewState.isActive || !interviewState.sessionId) return;
+    if (!interviewState.isActive || !interviewState.sessionId || hasCompletedAssessment) return;
 
     // Add user response
     addMessage(response, false);

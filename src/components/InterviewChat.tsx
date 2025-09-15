@@ -47,7 +47,7 @@ export const InterviewChat = ({
   }, [messages]);
 
   const handleSendMessage = () => {
-    if (inputMessage.trim()) {
+    if (inputMessage.trim() && !hasCompletedAssessment) {
       onMessageSent(inputMessage.trim());
       setInputMessage("");
     }
@@ -178,14 +178,15 @@ export const InterviewChat = ({
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your response here..."
+              placeholder={hasCompletedAssessment ? "Assessment completed - no further input allowed" : "Type your response here..."}
               className="min-h-[80px] resize-none border-border focus:ring-primary"
               rows={3}
+              disabled={hasCompletedAssessment}
             />
             <div className="flex flex-col gap-2">
               <Button
                 onClick={handleSendMessage}
-                disabled={!inputMessage.trim()}
+                disabled={!inputMessage.trim() || hasCompletedAssessment}
                 className="bg-gradient-primary hover:bg-primary-hover text-white shadow-button h-10"
               >
                 <Send className="w-4 h-4" />
@@ -194,13 +195,14 @@ export const InterviewChat = ({
                 onClick={toggleVoiceInput}
                 variant="outline"
                 className={`h-10 ${isListening ? 'bg-destructive text-destructive-foreground' : ''}`}
+                disabled={hasCompletedAssessment}
               >
                 {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
               </Button>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Press Enter to send, Shift+Enter for new line
+            {hasCompletedAssessment ? "Assessment completed" : "Press Enter to send, Shift+Enter for new line"}
           </p>
         </div>
       </div>
