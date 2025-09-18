@@ -102,7 +102,7 @@ Simply open [Lovable](https://lovable.dev/projects/162798db-d8d7-4641-a1ec-ebcd5
 
 <div align="center">
 
-**Built with ❤️ using modern web technologies**
+Here are the key files as requested.
 
 [Live Demo](https://lovable.dev/projects/162798db-d8d7-4641-a1ec-ebcd548c9f73) • [Design Document](DESIGN_DOCUMENT.md) • [Sample Transcripts](SAMPLE_TRANSCRIPTS.md)
 
