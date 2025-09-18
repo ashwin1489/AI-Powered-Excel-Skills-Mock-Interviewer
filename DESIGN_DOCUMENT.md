@@ -223,4 +223,4 @@ The system's conversational approach, comprehensive assessment coverage, and pro
 
 ---
 
-*This document serves as a comprehensive guide to the system's design, implementation, and strategic approach to AI-powered technical assessment as mentioned in the assignment's submission guidelines.*
+
