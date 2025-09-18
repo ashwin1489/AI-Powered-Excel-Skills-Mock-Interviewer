@@ -59,8 +59,8 @@ State:     React Hooks + Custom Logic Patterns
 
 4. **Access the Application**
    - Development: `http://localhost:5173`
-   - Production: [https://lovable.dev/projects/162798db-d8d7-4641-a1ec-ebcd548c9f73](https://lovable.dev/projects/162798db-d8d7-4641-a1ec-ebcd548c9f73)
-
+   - Production: [[https://lovable.dev/projects/162798db-d8d7-4641-a1ec-ebcd548c9f73](https://lovable.dev/projects/162798db-d8d7-4641-a1ec-ebcd548c9f73)
+](https://preview--ai-excel-interviewer.lovable.app/)
 ## 📊 Features Deep Dive
 
 ### 🎯 Assessment Coverage
