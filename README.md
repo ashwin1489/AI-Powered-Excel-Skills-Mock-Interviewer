@@ -1,6 +1,6 @@
 # 🤖 AI-Powered Excel Skills Mock Interviewer
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Available-brightgreen)](https://lovable.dev/projects/162798db-d8d7-4641-a1ec-ebcd548c9f73)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Available-brightgreen)](https://ai-excel-interviewer.lovable.app/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![React](https://img.shields.io/badge/React-18.3.1-blue)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
