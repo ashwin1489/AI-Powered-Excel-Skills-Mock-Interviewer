@@ -51,10 +51,10 @@ export const useInterviewLogic = () => {
         return;
       }
 
-      // Load questions
+      // Load questions (now requires authentication)
       const { data: questionsData, error: questionsError } = await supabase
         .from('interview_questions')
-        .select('*')
+        .select('id, question, category, difficulty, is_active, created_at, expected_answer_points')
         .eq('is_active', true)
         .order('created_at');
       
